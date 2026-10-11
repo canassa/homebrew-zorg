@@ -1,0 +1,65 @@
+# Rendered by .github/workflows/release.yml in canassa/zorg; do not edit in the tap.
+class Zorg < Formula
+  desc "Zig compiler fork with a self-hosted AArch64 backend"
+  homepage "https://github.com/canassa/zorg"
+  version "0.17.1-zorg.1"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
+  on_macos do
+    depends_on arch: :arm64
+
+    on_arm do
+      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.1/zorg-aarch64-macos-0.17.1-zorg.1.tar.xz"
+      sha256 "fe2fc1d21322795d8e9633ec51540da2b5d78d39ba0a10a63e25f8ce173c2384"
+    end
+  end
+  on_linux do
+    on_arm do
+      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.1/zorg-aarch64-linux-0.17.1-zorg.1.tar.xz"
+      sha256 "2691c737b95b81bcee719ed6b3fa8ec828336837401e7879ab4060d4689716de"
+    end
+    on_intel do
+      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.1/zorg-x86_64-linux-0.17.1-zorg.1.tar.xz"
+      sha256 "43bc8ba478639b840dddd83268a1b6491cf272dffce4006a7614824c5ac1e5f9"
+    end
+  end
+
+  # Keep the bundled std, libc and headers exactly as shipped.
+  skip_clean "libexec"
+
+  def install
+    # Flat tarball: zorg, lib/, LICENSE, README.md. zorg resolves the symlink
+    # to libexec/zorg and finds libexec/lib.
+    libexec.install Dir["*"]
+    bin.install_symlink libexec/"zorg"
+  end
+
+  test do
+    ENV["ZORG_GLOBAL_CACHE_DIR"] = (testpath/"cache").to_s
+    assert_equal version.to_s.sub("-zorg.", "+zorg."), shell_output("#{bin}/zorg version").strip
+    assert_match "#{libexec}/lib", shell_output("#{bin}/zorg env")
+
+    (testpath/"hello.zig").write <<~ZIG
+      const std = @import("std");
+      pub fn main(init: std.process.Init) !void {
+          try std.Io.File.stdout().writeStreamingAll(init.io, "Hello, world!");
+      }
+    ZIG
+    system bin/"zorg", "build-exe", "hello.zig", "-fllvm"
+    assert_equal "Hello, world!", shell_output("./hello")
+    if Hardware::CPU.arm?
+      system bin/"zorg", "build-exe", "hello.zig", "-fno-llvm", "--name", "hello-self"
+      assert_equal "Hello, world!", shell_output("./hello-self")
+    end
+
+    ENV.delete "CPATH"
+    (testpath/"hello.c").write "#include <stdio.h>\nint main(void) { fputs(\"hi\", stdout); return 0; }\n"
+    system bin/"zorg", "cc", "hello.c", "-o", "hello-c"
+    assert_equal "hi", shell_output("./hello-c")
+  end
+end
