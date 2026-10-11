@@ -1,51 +1,34 @@
-name: brew test-bot
+name: tests
+
+# Installs and tests the formula on every platform zorg ships for. The
+# formula is rendered and pushed by canassa/zorg's release workflow, so a
+# push here is usually a new release.
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  test-bot:
+  test:
+    name: test ${{ matrix.os }}
+    if: hashFiles('Formula/zorg.rb') != ''
     strategy:
+      fail-fast: false
       matrix:
-        os: [ macos-15-intel, macos-26 ]
-        include:
-          - os: ubuntu-latest
-            container: ghcr.io/homebrew/brew:main
+        os: [macos-26, ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container }}
-    permissions:
-      actions: read
-      checks: read
-      contents: read
-      pull-requests: read
     steps:
       - name: Set up Homebrew
-        id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache Homebrew Bundler RubyGems
-        uses: actions/cache@v5
-        with:
-          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
-          key: ${{ matrix.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
-          restore-keys: ${{ matrix.os }}-rubygems-
-
-      - run: brew test-bot --only-cleanup-before
-
-      - run: brew test-bot --only-setup
-
-      - run: brew test-bot --only-tap-syntax
-      - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
-
-      - name: Upload bottles as artifact
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v7
-        with:
-          name: bottles_${{ matrix.os }}
-          path: '*.bottle.*'
+      - run: brew style canassa/zorg
+      - run: brew audit --strict --online --formula canassa/zorg/zorg
+      - run: brew install --formula canassa/zorg/zorg
+      - run: brew test canassa/zorg/zorg
+      - run: brew linkage --test canassa/zorg/zorg || true
