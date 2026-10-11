@@ -16,7 +16,6 @@ permissions:
 jobs:
   test:
     name: test ${{ matrix.os }}
-    if: hashFiles('Formula/zorg.rb') != ''
     strategy:
       fail-fast: false
       matrix:
@@ -27,8 +26,14 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: brew style canassa/zorg
-      - run: brew audit --strict --online --formula canassa/zorg/zorg
-      - run: brew install --formula canassa/zorg/zorg
-      - run: brew test canassa/zorg/zorg
-      - run: brew linkage --test canassa/zorg/zorg || true
+      - name: audit, install and test
+        run: |
+          if [ ! -f "$(brew --repository canassa/zorg)/Formula/zorg.rb" ]; then
+            echo "no formula yet"
+            exit 0
+          fi
+          brew style canassa/zorg
+          brew audit --strict --online --formula canassa/zorg/zorg
+          brew install --formula canassa/zorg/zorg
+          brew test canassa/zorg/zorg
+          zorg version
