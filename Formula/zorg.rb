@@ -2,7 +2,7 @@
 class Zorg < Formula
   desc "Zig compiler fork with a self-hosted AArch64 backend"
   homepage "https://github.com/canassa/zorg"
-  version "0.17.1-zorg.1"
+  version "0.17.1-zorg.3"
   license "MIT"
 
   livecheck do
@@ -15,18 +15,18 @@ class Zorg < Formula
     depends_on arch: :arm64
 
     on_arm do
-      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.1/zorg-aarch64-macos-0.17.1-zorg.1.tar.xz"
-      sha256 "fe2fc1d21322795d8e9633ec51540da2b5d78d39ba0a10a63e25f8ce173c2384"
+      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.3/zorg-aarch64-macos-0.17.1-zorg.3.tar.xz"
+      sha256 "fc34363b635ed1a1e2e37a32364dffef304a52c3c6b04d8796496501dad22ef7"
     end
   end
   on_linux do
     on_arm do
-      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.1/zorg-aarch64-linux-0.17.1-zorg.1.tar.xz"
-      sha256 "2691c737b95b81bcee719ed6b3fa8ec828336837401e7879ab4060d4689716de"
+      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.3/zorg-aarch64-linux-0.17.1-zorg.3.tar.xz"
+      sha256 "f300239f2f4e7f1e519c6346fb5adc5a2d93f34e8c7188728f20ea3e502fa283"
     end
     on_intel do
-      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.1/zorg-x86_64-linux-0.17.1-zorg.1.tar.xz"
-      sha256 "43bc8ba478639b840dddd83268a1b6491cf272dffce4006a7614824c5ac1e5f9"
+      url "https://github.com/canassa/zorg/releases/download/v0.17.1-zorg.3/zorg-x86_64-linux-0.17.1-zorg.3.tar.xz"
+      sha256 "953ab4c9d90a9e0b0e53138e64ed03b2fbf43eeddc5763a7a3b9a5adc1e6dbc5"
     end
   end
 
